@@ -1,4 +1,4 @@
-baseurl = "http://http://alxpy.com/"
+baseurl = "http://alxpy.com/"
 languageCode = "ru"
 title = "alxpy.com"
 theme = "hugo-cactus-theme"
