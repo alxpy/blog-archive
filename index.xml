@@ -1,0 +1,647 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>alxpy.com</title>
+    <link>http://alxpy.com/</link>
+    <description>Recent content on alxpy.com</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ru</language>
+    <lastBuildDate>Sun, 03 May 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://alxpy.com/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Собственные типы полей в SQLAlchemy</title>
+      <link>http://alxpy.com/blog/custom-field-types-in-sqlalchemy/</link>
+      <pubDate>Sun, 03 May 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://alxpy.com/blog/custom-field-types-in-sqlalchemy/</guid>
+      <description>&lt;p&gt;Часто возникает необходимость хранить в БД статус модели. При этом необходимо оптимально хранить статус в базе и удобно работать с ним в коде. Я покажу как это сделать с использованием собственных типов полей в SQLAlchemy.&lt;/p&gt;
+
+&lt;p&gt;Допустим у нас есть простая модель юзера:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;class User(Base):
+    __tablename__ = &#39;users&#39;
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(80))
+
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+       return &#39;&amp;lt;User: {}&amp;gt;&#39;.format(self.name)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Правильный способ решения задачи это хранить в базе числовое значение. Если просто запомнить какое число отвечает какому статусу, то в коде мгновенно начнут появляться ошибки. Использование констант решает это проблему (&lt;code&gt;STATUS_ACTIVE = 0&lt;/code&gt;, &lt;code&gt;user.status = user.STATUS_ACTIVE&lt;/code&gt;), но такое решение все равно не достаточно красиво и заставляет создавать отдельные словари для хранения текстового отображения статусов. В Python 3.4 появились удобные типы &lt;a href=&#34;https://docs.python.org/3/library/enum.html&#34;&gt;Emun/IntEnum&lt;/a&gt;, которые мы будем использовать для описания статусов. Создадим атрибут модели:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;STATUS = IntEnum(&#39;UserStatus&#39;, {
+    &#39;active&#39;: 0,
+    &#39;deleted&#39;: 1,
+})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Для наглядности покажу как работать с Enum:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;gt;&amp;gt;&amp;gt; STATUS.active
+&amp;lt;UserStatus.active: 0&amp;gt;
+&amp;gt;&amp;gt;&amp;gt; STATUS.active.value
+0
+&amp;gt;&amp;gt;&amp;gt; STATUS.active.name
+&#39;active&#39;
+&amp;gt;&amp;gt;&amp;gt; STATUS(1)
+&amp;lt;UserStatus.deleted: 1&amp;gt;
+&amp;gt;&amp;gt;&amp;gt; STATUS(1).name
+&#39;deleted&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;В SQLAlchemy есть специальный тип &lt;code&gt;TypeDecorator&lt;/code&gt;, на основе которого можно создать собственный тип поля:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;class EnumType(TypeDecorator):
+    impl = SmallInteger
+
+    def __init__(self, enum, *args, **kwargs):
+        self._enum = enum
+        TypeDecorator.__init__(self, *args, **kwargs)
+
+    def process_bind_param(self, enum, dialect):
+        return enum.value
+
+    def process_result_value(self, value, dialect):
+        return self._enum(value)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Создадим у юзера поля status, созданного нами, типа &lt;code&gt;EnumType&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;class User(Base):
+    __tablename__ = &#39;users&#39;
+
+    STATUS = IntEnum(&#39;UserStatus&#39;, {
+        &#39;active&#39;: 0,
+        &#39;deleted&#39;: 1,
+    })
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(80))
+    status = Column(EnumType(STATUS), default=STATUS.active)
+
+    ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Работать это будет таким образом: реальное поле в базе будет типа &lt;code&gt;SmallInteger&lt;/code&gt;.  Когда мы присваиваем статусу юзера значение &lt;code&gt;STATUS.active&lt;/code&gt;, метод &lt;code&gt;process_bind_param()&lt;/code&gt; будет писать в базу &lt;code&gt;STATUS.active.value&lt;/code&gt;, а при чтении из базы метод &lt;code&gt;process_result_value()&lt;/code&gt; буде возвращать &lt;code&gt;STATUS.active&lt;/code&gt; (мне так было удобнее, можно возвращать и &lt;code&gt;STATUS.active.name&lt;/code&gt;). Это, собственно, все.&lt;/p&gt;
+
+&lt;p&gt;P.S. Буду рад вопросам, идеям и замечаниям в комментариях и подписчикам в моем &lt;a href=&#34;https://twitter.com/_alxpy&#34;&gt;мини-блоге&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Пишем простой чат на Tornado</title>
+      <link>http://alxpy.com/blog/write-a-simple-tornado-chat/</link>
+      <pubDate>Fri, 30 Jan 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://alxpy.com/blog/write-a-simple-tornado-chat/</guid>
+      <description>
+
+&lt;p&gt;В этой статье я попытаюсь рассказать о том, как написать очень простой чат на Tornado с использованием протокола WebSocket.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Tornado — расширяемый, неблокирующий веб-сервер и фреймворк, написанный на Python.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;И так, начнем. Первым делом Вам необходимо установить Tornado (собственно, больше ничего устанавливать и не нужно):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ mkdir chat
+$ cd chat/
+$ virtualenv -p /usr/bin/python3 venv
+$ . venv/bin/activate
+$ pip install tornado
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Всё, все предварительные настройки готовы и мы можем начать писать код.&lt;/p&gt;
+
+&lt;p&gt;Нам понадобятся седующие модули:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;import os.path
+import tornado.ioloop
+import tornado.web
+import tornado.websocket
+import tornado.auth
+import tornado.gen
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Что делает каждый из них, будет понятно дальше.&lt;/p&gt;
+
+&lt;h2 id=&#34;конфигурация-приложения:13e4dfdcef04281049fd1665679b3ddc&#34;&gt;Конфигурация приложения&lt;/h2&gt;
+
+&lt;p&gt;Создадим класс, описывающий наше приложение:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;class Application(tornado.web.Application):
+    def __init__(self):
+        handlers = [
+            (r&#39;/&#39;, MainHandler),
+            (r&#39;/chat&#39;, ChatHandler),
+            (r&#39;/ws&#39;, WebSocketHandler),
+            (r&#39;/login&#39;, LoginHandler),
+            (r&#39;/logout&#39;, LogoutHandler),
+        ]
+        settings = dict(
+            cookie_secret=&amp;quot;your_cookie_secret&amp;quot;,
+            template_path=os.path.join(os.path.dirname(__file__), &#39;templates&#39;),
+            static_path=os.path.join(os.path.dirname(__file__), &#39;static&#39;),
+            twitter_consumer_key=&#39;your_twitter_consumer_key&#39;,
+            twitter_consumer_secret=&#39;your_twitter_consumer_secret&#39;,
+            login_url=&#39;/&#39;,
+            xsrf_cookies=True,
+            debug=True,
+        )
+        tornado.web.Application.__init__(self, handlers, **settings)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;В терминологии Django &lt;code&gt;handlers&lt;/code&gt; (обработчик) это аналог &lt;code&gt;URLconf&lt;/code&gt;, он указывает по какому адресу будет вызываться &lt;code&gt;handler&lt;/code&gt; (&lt;code&gt;view&lt;/code&gt; в Django).&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;login_url&lt;/code&gt; - адрес на который будет перенаправлен неизвестный пользователь, если попытается зайти на страницу, для которой нужна авторизация.&lt;/p&gt;
+
+&lt;p&gt;В Tornado есть встроенная поддержка аутентификации и авторизации через Google, Facebook, Twitter и FriendFeed. Мы будем использовать Twitter. Для этого нам необходимо зарегистрировать свое приложение &lt;a href=&#34;https://apps.twitter.com/app/new&#34;&gt;тут&lt;/a&gt;. При создании приложения, необходимо указать &lt;code&gt;Callback URL&lt;/code&gt; - адрес на который будет перенапрвален пользователь после авторизации (в моем случае это 127.0.0.1:5000/login). После регистрации укажите в коде &lt;code&gt;twitter_consumer_key&lt;/code&gt; и &lt;code&gt;twitter_consumer_secret&lt;/code&gt;,   эти данные будут подставленны в запрос на сервер твиттера при авторизации.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;template_path&lt;/code&gt; - путь к шаблонам, &lt;code&gt;static_path&lt;/code&gt; - путь к статическим файлам (js, css). В этой статье я не буду рассказывать о шаблонизаторе Tornado.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;cookie_secret&lt;/code&gt; - ключ для шифровки cookies, без него cookies можно было бы легко подделать. &lt;code&gt;xsrf_cookies=True&lt;/code&gt; - включаем защиту от &lt;a href=&#34;https://ru.wikipedia.org/wiki/%D0%9C%D0%B5%D0%B6%D1%81%D0%B0%D0%B9%D1%82%D0%BE%D0%B2%D0%B0%D1%8F_%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D0%BB%D0%BA%D0%B0_%D0%B7%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D0%B0&#34;&gt;межсайтовой подделки запроса&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Во время разработки Вы постоянно правите код и, что-бы после каждой правки не перезапускать Ваше приложение вручную, можно указать Tornado делать это автоматически - &lt;code&gt;debug=True&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;создание-обработчиков:13e4dfdcef04281049fd1665679b3ddc&#34;&gt;Создание обработчиков&lt;/h2&gt;
+
+&lt;p&gt;Далее мы создадим базовый обработчик (handler):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;class BaseHandler(tornado.web.RequestHandler):
+    def get_current_user(self):
+        user = self.get_secure_cookie(&#39;username&#39;)
+        if user:
+            user = user.decode(&#39;utf-8&#39;)
+        return user
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Что бы создать обработчик, необходимо наследоваться от &lt;code&gt;tornado.web.RequestHandler&lt;/code&gt;. Для определения текущего пользователя (current_user) служит &lt;code&gt;get_current_user()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Обработчик главной страницы:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;class MainHandler(BaseHandler):
+    def get(self):
+        if self.current_user:
+            self.redirect(&#39;/chat&#39;)
+        self.render(&#39;index.html&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Наследуемся от базового обработчика. Легко понять, что при GET-запросе (а каждый обработчик может обрабатывать одновременно GET/HEAD/POST запросы), в зависивости от того, вошел ли пользователь в систему или нет, ему либо будет показана страница входа/регистрации (index.html), либо он будет перенаправлен на страницу чата.&lt;/p&gt;
+
+&lt;p&gt;При этом просто так зайти на страницу чата нельзя:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;class ChatHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        self.render(&#39;chat.html&#39;, user=self.current_user)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;@tornado.web.authenticated&lt;/code&gt; &amp;ldquo;пускает&amp;rdquo; на страницу только &amp;ldquo;вошедших&amp;rdquo; пользователей, а остальных перенаправляет на &lt;code&gt;login_url&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Далее создадим обработчик для входа:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;class LoginHandler(tornado.web.RequestHandler, tornado.auth.TwitterMixin):
+    @tornado.gen.coroutine
+    def get(self):
+        if self.get_argument(&amp;quot;oauth_token&amp;quot;, None):
+            user = yield self.get_authenticated_user()
+            self.set_secure_cookie(&#39;username&#39;, str(user[&#39;username&#39;]))
+            self.redirect(&amp;quot;/chat&amp;quot;)
+        else:
+            yield self.authorize_redirect()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Дополнительно наследуемся от &lt;code&gt;tornado.auth.TwitterMixin&lt;/code&gt;, который служит для OAuth-аутентификации через Твиттер. При первом вызове обработчика он перенаправит нас на страницу Твиттера, а после авторизации Твиттер снова &amp;ldquo;перекинет&amp;rdquo;  нас на этот обработчик. Если запрос Твиттера содержал &lt;code&gt;oauth_token&lt;/code&gt;, то мы создаем пользователя, устанавливаем cookie с его именем и делаем &amp;ldquo;редирект&amp;rdquo; на страницу чата. В противном случае, пользователя перекинет на страницу с формой/кнопкой входа.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;@tornado.gen.coroutine&lt;/code&gt; - декоратор для асинхронных генераторов. Про декораторы и генераторы позже будет в отдельных статьх.&lt;/p&gt;
+
+&lt;p&gt;В нашем случае, для выхода нужно всего лишь очистить cookies:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;class LogoutHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.clear_all_cookies()
+        self.redirect(&amp;quot;/&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;работа-с-websocket:13e4dfdcef04281049fd1665679b3ddc&#34;&gt;Работа с WebSocket&lt;/h2&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;WebSocket — протокол полнодуплексной связи поверх TCP-соединения, предназначенный для обмена сообщениями между браузером и веб-сервером в режиме реального времени.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Если очень просто, то мы создаем канал между клиентом и сервером, держим его постоянно открытым и обмениваемся сообшениями. Создать канал очень просто:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;var ws = new WebSocket(&amp;quot;ws://127.0.0.1:5000/ws&amp;quot;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Теперь для отправки сообщений мы вызываем &lt;code&gt;ws.send(msg)&lt;/code&gt;, где msg - переменная с текстом сообщения. &lt;code&gt;ws.onmessage = function (evt) { ... }&lt;/code&gt; - функция, которая обрабатывает входящие собщения.&lt;/p&gt;
+
+&lt;p&gt;На стороне сервера с WebSocket работает обработчик наследованный от BaseHandler и &lt;code&gt;tornado.websocket.WebSocketHandler&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;class WebSocketHandler(BaseHandler, tornado.websocket.WebSocketHandler):
+    connections = set()
+
+    def open(self):
+        WebSocketHandler.connections.add(self)
+
+    def on_close(self):
+        WebSocketHandler.connections.remove(self)
+
+    def on_message(self, msg):
+        self.send_messages(msg)
+
+    def send_messages(self, msg):
+        for conn in self.connections:
+            conn.write_message({&#39;name&#39;: self.current_user, &#39;msg&#39;: msg})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;open&lt;/code&gt; и &lt;code&gt;on_close&lt;/code&gt; пополняют список соединений (connections) новым каналом и удалют канал из списка при его закрытии. &lt;code&gt;on_message&lt;/code&gt; - реагирует на входящее сообщение, &lt;code&gt;write_message()&lt;/code&gt; отправляет сообщение указанному соединению (conn). Если вдруг можно отослать сообщение сразу по всем каналом, подскажите, пожалуйста, в комментариях как это сделать.&lt;/p&gt;
+
+&lt;h2 id=&#34;запуск-приложения:13e4dfdcef04281049fd1665679b3ddc&#34;&gt;Запуск приложения&lt;/h2&gt;
+
+&lt;p&gt;Тут все просто: создаем объект нашего приложения и говорим какой порт ему слушать (если в окружении нет параметра &amp;lsquo;PORT&amp;rsquo;, то 5000й):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;def main():
+    port = int(os.environ.get(&amp;quot;PORT&amp;quot;, 5000))
+    app = Application()
+    app.listen(port)
+    tornado.ioloop.IOLoop.instance().start()
+
+if __name__ == &#39;__main__&#39;:
+    main()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Создаем экземпляр основной петли ввода/вывода &lt;code&gt;tornado.ioloop.IOLoop&lt;/code&gt; и запускаем его.&lt;/p&gt;
+
+&lt;h2 id=&#34;ссылки:13e4dfdcef04281049fd1665679b3ddc&#34;&gt;Ссылки&lt;/h2&gt;
+
+&lt;p&gt;Полный код - &lt;a href=&#34;https://github.com/alxpy/simple-tornado-chat/tree/0.2&#34;&gt;https://github.com/alxpy/simple-tornado-chat/tree/0.2&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Документация по Tornado - &lt;a href=&#34;http://www.tornadoweb.org/en/stable/&#34;&gt;http://www.tornadoweb.org/en/stable/&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;послесловие:13e4dfdcef04281049fd1665679b3ddc&#34;&gt;Послесловие&lt;/h2&gt;
+
+&lt;p&gt;Получилось сумбурно, но надеюсь в целом понятно. Если есть дополнительные вопросы, задавайте их в комментариях и я постараюсь ответить.&lt;/p&gt;
+
+&lt;p&gt;P.S. Буду рад вопросам, идеям и замечаниям в комментариях и подписчикам в моем &lt;a href=&#34;https://twitter.com/_alxpy&#34;&gt;мини-блоге&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Киллер-фичи Python 3</title>
+      <link>http://alxpy.com/blog/killer-features-of-python-3/</link>
+      <pubDate>Thu, 22 Jan 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://alxpy.com/blog/killer-features-of-python-3/</guid>
+      <description>
+
+&lt;p&gt;Когда человек впервые смотрит на различия Python 2 и Python 3, то первым делом он замечает, что &lt;code&gt;print()&lt;/code&gt; теперь функция, а не оператор. Я хочу показать немного больше отличий, что бы Вы понимали, что пора переходить на свежую версию Python.&lt;/p&gt;
+
+&lt;h2 id=&#34;строки:dd4d42089cf450b5531f14e92505f36d&#34;&gt;Строки&lt;/h2&gt;
+
+&lt;p&gt;В Python 3 строки стали только &lt;code&gt;Unicode&lt;/code&gt;. Кодровка по умолчанию &amp;ndash; &lt;code&gt;Utf-8&lt;/code&gt;. Это очень удобно, особенно, если вы постоянно работаете с кириллицей. Так же, это спасает от постояных ошибок, связанных со смешиванием закодированного и декодированного текстов. Можно больше не использовать литерал &lt;code&gt;u&amp;quot;...&amp;quot;&lt;/code&gt;, но все еще нужно использовать литерал &lt;code&gt;b&amp;quot;...&amp;quot;&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Для хранения текста используется тип - &lt;code&gt;str&lt;/code&gt;, а для хранения данных - &lt;code&gt;bytes&lt;/code&gt;. Неявные преобразования &lt;code&gt;str-bytes&lt;/code&gt; запрещенны. Это защищает от частых ошибок в коде.&lt;/p&gt;
+
+&lt;h2 id=&#34;числа:dd4d42089cf450b5531f14e92505f36d&#34;&gt;Числа&lt;/h2&gt;
+
+&lt;p&gt;В Python 2 были 2 типа целых чисел - &lt;code&gt;int&lt;/code&gt; и &lt;code&gt;long&lt;/code&gt;. В Python 3 остался только &lt;code&gt;long&lt;/code&gt;, но называется от теперь &lt;code&gt;int&lt;/code&gt;. Теперь при умножении числа или возведении его в степень, оно не может поменять тип.&lt;/p&gt;
+
+&lt;p&gt;Поскольку вещественные числа (&lt;code&gt;float&lt;/code&gt;) неточны, при работе с деньгами в Python необходимо использовать тип &lt;code&gt;Decimal&lt;/code&gt;. Так вот, в Python 3 он стал работать в 20-120 раз быстрее, так как переписан с Python на С.&lt;/p&gt;
+
+&lt;h2 id=&#34;аннотации-функций:dd4d42089cf450b5531f14e92505f36d&#34;&gt;Аннотации функций&lt;/h2&gt;
+
+&lt;p&gt;В Python 3 появилась аннотация аргументов и возвращемых значений функций. Выглядит это примерно так:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;gt;&amp;gt;&amp;gt; func.__annotations__
+{&#39;b&#39;: &amp;lt;class &#39;float&#39;&amp;gt;, &#39;return&#39;: &amp;lt;class &#39;str&#39;&amp;gt;, &#39;a&#39;: &amp;lt;class &#39;int&#39;&amp;gt;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Более того, аннотацией может быть не только тип, а и число, строка и вычисление. Например:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;gt;&amp;gt;&amp;gt; def func(name: &#39;Name of Stutent&#39;):
+...     pass
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Вывод: аннотации функций дают &amp;ldquo;плюс&amp;rdquo; к удобству работе в IDE и &amp;ldquo;плюс&amp;rdquo; к структуррированию документации кода.&lt;/p&gt;
+
+&lt;h2 id=&#34;nonlocal:dd4d42089cf450b5531f14e92505f36d&#34;&gt;Nonlocal&lt;/h2&gt;
+
+&lt;p&gt;Из внутренней функции в Python 2 нельзя менять переменные во внешней. В Python 3 можно. Далее код нетребующий поснений:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;gt;&amp;gt; def f():
+...     a = 10
+...     def g():
+...         nonlocal a
+...         a += 1
+...     g()
+...     return a
+... 
+&amp;gt;&amp;gt;&amp;gt; f()
+11
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Отличия от &lt;code&gt;global&lt;/code&gt; в том, что &lt;code&gt;global&lt;/code&gt; засталяет интерпретатор искать имя в пространстве имен всего модуля, а &lt;code&gt;nonlocal&lt;/code&gt; &amp;ndash; вверх по функциям, в которых он объявлен.&lt;/p&gt;
+
+&lt;h2 id=&#34;keyword-only:dd4d42089cf450b5531f14e92505f36d&#34;&gt;Keyword only&lt;/h2&gt;
+
+&lt;p&gt;Все что идет после &lt;code&gt;*&lt;/code&gt; можно указывать только явно, то есть по имени. Очень повышает читаемость кода.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;gt;&amp;gt;&amp;gt; def func(a, b, *, c, d=10):
+...     return a, b, c, d
+... 
+&amp;gt;&amp;gt;&amp;gt; func(1,2,c=3,d=4)
+(1, 2, 3, 4)
+&amp;gt;&amp;gt;&amp;gt; func(1,2,d=4,c=3)
+(1, 2, 3, 4)
+&amp;gt;&amp;gt;&amp;gt; func(1,2,c=3)
+(1, 2, 3, 10)
+&amp;gt;&amp;gt;&amp;gt; func(1,2,3,4)
+Traceback (most recent call last):
+  File &amp;quot;&amp;quot;, line 1, in 
+TypeError: func() takes 2 positional arguments but 4 were given
+&amp;gt;&amp;gt;&amp;gt; func(1,2)
+Traceback (most recent call last):
+  File &amp;quot;&amp;quot;, line 1, in 
+TypeError: func() missing 1 required keyword-only argument: &#39;c&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;extended-iterable-unpacking:dd4d42089cf450b5531f14e92505f36d&#34;&gt;Extended Iterable Unpacking&lt;/h2&gt;
+
+&lt;p&gt;Тут обяснений явно не нужно:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;gt;&amp;gt;&amp;gt; a, *spam, b = &#39;1,2,3,4,5&#39;.split(&#39;,&#39;)
+&amp;gt;&amp;gt;&amp;gt; a
+&#39;1&#39;
+&amp;gt;&amp;gt;&amp;gt; b
+&#39;5&#39;
+&amp;gt;&amp;gt;&amp;gt; spam
+[&#39;2&#39;, &#39;3&#39;, &#39;4&#39;]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;новый-super:dd4d42089cf450b5531f14e92505f36d&#34;&gt;Новый  super()&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;super()&lt;/code&gt; теперь можно вызывать без аргументов, так как класс и экзампляр будут выбраны автоматичести.&lt;/p&gt;
+
+&lt;h2 id=&#34;новый-gil:dd4d42089cf450b5531f14e92505f36d&#34;&gt;Новый GIL&lt;/h2&gt;
+
+&lt;p&gt;В Python 3.2 появился новый &lt;a href=&#34;https://ru.wikipedia.org/wiki/Global_Interpreter_Lock&#34;&gt;GIL&lt;/a&gt; который лучше работает. Теперь потоки спят и ждут GIL не 100 тиков (что может быть очень долго), а 5 мс. В результате, вероятность того, что многопоточное приложение будет работать дольше однопоточного крайне мала и холливарные статьи на эти темы можно забыть.&lt;/p&gt;
+
+&lt;p&gt;Детальнее об этом я постараюсь рассказать в отдельной статье.&lt;/p&gt;
+
+&lt;p&gt;В заключение
+Python 3 приобрел массу крутых плюшек и однозначно всем пора перейти на него. Конечно, остается проблема с библиотеками, которые не поддерживают 3-ю версию языка, но уже достаточно много библиотек исправлены. Что бы искоренить эту проблему, старые библиотеки нужно портировать, а новые изначально писать на Python 3.&lt;/p&gt;
+
+&lt;p&gt;Полный список нововведений: Python &lt;a href=&#34;https://docs.python.org/3.0/whatsnew/3.0.html&#34;&gt;3.0&lt;/a&gt;, &lt;a href=&#34;https://docs.python.org/3.1/whatsnew/3.1.html&#34;&gt;3.1&lt;/a&gt;, &lt;a href=&#34;https://docs.python.org/3.2/whatsnew/3.2.html&#34;&gt;3.2&lt;/a&gt;, &lt;a href=&#34;https://docs.python.org/3.3/whatsnew/3.3.html&#34;&gt;3.3&lt;/a&gt;, &lt;a href=&#34;https://docs.python.org/3.4/whatsnew/3.4.html&#34;&gt;3.4&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;P.S. Буду рад вопросам, идеям и замечаниям в комментариях и подписчикам в моем &lt;a href=&#34;https://twitter.com/_alxpy&#34;&gt;мини-блоге&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Готовим Django: uWSGI &#43; Nginx</title>
+      <link>http://alxpy.com/blog/django-uwsgi-nginx/</link>
+      <pubDate>Mon, 12 Jan 2015 00:00:00 +0000</pubDate>
+      
+      <guid>http://alxpy.com/blog/django-uwsgi-nginx/</guid>
+      <description>
+
+&lt;p&gt;На просторах интернета есть масса статей о том, как деплоить Django, используя различные серверы приложений. Статьи хороши, но все же при деплои  этого блога (изначально блог работал на Django), ни одна из них не ответила полностью на все вопросы. Я хочу поделиться тем, как это сделал я. Упор будем делать на простоту.&lt;/p&gt;
+
+&lt;p&gt;Итак допустим, что у вас уже есть готовое Django-приложение на вашей локальной машине, файл &lt;code&gt;requirements.txt&lt;/code&gt; с прописанными в нем зависимостями (используемыми библиотеками), арендованный VPS и что вы умеете работать с консолью.&lt;/p&gt;
+
+&lt;h2 id=&#34;первоначальные-настройки:8d6b9f4b89802d612e86db68bd3d4466&#34;&gt;Первоначальные настройки&lt;/h2&gt;
+
+&lt;p&gt;Первым делом, зайдем на сервер и обновим пакеты:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ssh user@server
+sudo apt-get update
+sudo apt-get upgrade
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Установим Nginx:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo apt-get install nginx
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Это очень быстрый и легкий прокси-сервер. Он будет раздавать статику вашего сайта и взаимодействовать с сервером приложений. Сервером приложений будет выступать uWSGI. Именно он будет запускать Django-приложение.&lt;/p&gt;
+
+&lt;p&gt;Установим uWSGI:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo apt-get install python3-pip # менеджер пакетов для Python 3
+sudo pip install uwsgi
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Установим утилиту для создания виртуального окружения:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo apt-get install python-virtualenv
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Ну, и не будем же мы заливать приложения на сервер по ftp, в самом деле? Так что установим git:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo apt-get install git
+# минимальная настройка:
+git config --global user.name &amp;quot;John Doe&amp;quot;
+git config --global user.email johndoe@example.com
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;настроим-бд:8d6b9f4b89802d612e86db68bd3d4466&#34;&gt;Настроим БД&lt;/h2&gt;
+
+&lt;p&gt;Как БД будем использовать PostgreSQL (по рекомендации разработчиков Django):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo apt-get install libpq-dev python-dev
+sudo apt-get install postgresql postgresql-contrib
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Сменим пользователя системы:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;sudo su - postgres
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Создадим БД для нашего сайта:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;createdb your_blog_db
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Создадим пользователя БД:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;createuser -P your_db_user
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Входим в консольный интерфейс PostgreSQL:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;psql
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;и даем нашему пользователю права на работу с нашей базой:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;GRANT ALL PRIVILEGES ON DATABASE yout_blog_db TO your_db_user;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Выйдем из консольного интерфейса PostgreSQL и вернемся к первоначальному пользователю системы: для этого 2 раза нажмем &lt;code&gt;Ctrl + D&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h2 id=&#34;зальем-приложение-на-сервер:8d6b9f4b89802d612e86db68bd3d4466&#34;&gt;Зальем приложение на сервер&lt;/h2&gt;
+
+&lt;p&gt;Первым делом необходимо будет сделать некоторые правки нашего приложения.&lt;/p&gt;
+
+&lt;p&gt;Настроить новую БД в файле settings.py вашего проекта:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;DATABASES = {
+    &#39;default&#39;: {
+        &#39;ENGINE&#39;: &#39;django.db.backends.postgresql_psycopg2&#39;,
+        &#39;NAME&#39;: &#39;your_blog_db&#39;,
+        &#39;USER&#39;: &#39;your_db_user&#39;,
+        &#39;PASSWORD&#39;: &#39;password&#39;,
+        &#39;HOST&#39;: &#39;localhost&#39;,
+        &#39;PORT&#39;: &#39;&#39;,
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Выключим режим отладки:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;DEBUG = False
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;Примечание&lt;/strong&gt;: это упрощенный пример и лучше разделять настройки проекта для окружений разработки и реальной работы - &lt;a href=&#34;https://code.djangoproject.com/wiki/SplitSettings&#34;&gt;раз&lt;/a&gt;, &lt;a href=&#34;http://habrahabr.ru/post/104686/&#34;&gt;два&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Теперь, если ваше приложение еще не добавлено в git-репозиторий, самое время сделать это (помним про &lt;a href=&#34;http://git-scm.com/docs/gitignore&#34;&gt;gitignore&lt;/a&gt;):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# корневой каталог вашего приложения
+git init
+git add * 
+git commit -m &#39;initial&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Далее есть минимум 2 способа:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Красивый и правильный, но надо немного больше повозиться - тыц.&lt;/li&gt;
+&lt;li&gt;Как делал я. Мне он был более удобен, так как у меня уже был аккаунт в облачном git-хостинге (называйте как хотите).  Расскажу подробнее.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Регистрируетесь на &lt;a href=&#34;https://bitbucket.org/&#34;&gt;bitbucket.org&lt;/a&gt;, создаете новый приватный git-репозитоий и копируете ссылку на него. Это будет ваш удаленный репозиторий. Далее добавляете ссылку на уделенный репозиторий в локальный репозиторий:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;git remote add origin https://your_user@bitbucket.org/your_user/your_repository.git
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Отправляем код в удаленный репозиторий:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;git push
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Снова заходим по ssh на наш сервер и переходим в каталог, в котором хотим разместить приложение.  И так, копируем наше приложение:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;git clone https://your_user@bitbucket.org/your_user/your_repository.git
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Все, теперь ваш код на рабочем сервере. Создадим виртуальное окружение и установим в него необходимые модули:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;cd /path/to/project  # переходим в корень вашего приложения
+virtualenv -p /usr/bin/python3 venv  # создаем виртуальное окружение venv c Python 3 
+. venv/bin/activate  # активируем его
+pip install -r requirements.txt  # устанавливаем зависимости
+pip install psycopg2  # библиотека для работы Django с PostgreSQL
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Убедитесь, что приложение запускается:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;python3 manage.py runserver
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Теперь ваш код почти говтов к работе.&lt;/p&gt;
+
+&lt;h2 id=&#34;конфигурация-nginx-и-uwsgi:8d6b9f4b89802d612e86db68bd3d4466&#34;&gt;Конфигурация Nginx и  uWSGI&lt;/h2&gt;
+
+&lt;p&gt;Скопируйте файл &lt;a href=&#34;https://github.com/nginx/nginx/blob/master/conf/uwsgi_params&#34;&gt;https://github.com/nginx/nginx/blob/master/conf/uwsgi_params&lt;/a&gt; в корень вашего проекта.&lt;/p&gt;
+
+&lt;p&gt;Необходимо настроить конфигурации Nginx, uWSGI и настроить связь между ними. Обмениваться данными они будут через сокет-файл.&lt;/p&gt;
+
+&lt;p&gt;Создадим конфигурацию Nginx:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# /path/to/project/nginx.conf
+upstream django {
+    server unix:///path/to/project/blog.sock;  # путь к сокет-файлу
+}
+
+server {
+    # the port your site will be served on
+    listen      80;
+    # the domain name it will serve for
+    server_name ***.***.***.***;  # IP вашего сервера
+    charset     utf-8;
+
+    # max upload size
+    client_max_body_size 75M;
+
+    # Django media
+    location /media  {
+        alias /path/to/project/media;  # путь к вашим медиа-файлам
+    }
+
+    location /static {
+        alias /path/to/project/static; # путь к статическим файлам вашего сайта
+    }
+
+    location / {
+        uwsgi_pass  django;
+        include     /path/to/project/uwsgi_params; # путь к  uwsgi_params
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Создаем ссылку на нашу конфигурацию, что бы Nginx знал о ней. Затем перезапускаем Nginx:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ln -s /path/to/project/nginx.conf /etc/nginx/sites-enabled/
+service nginx restart
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Создадим конфигурацию uWSGI:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# uwsgi.ini
+[uwsgi]
+
+chdir           = /path/to/project  # путь к вашему проекту
+module          = your_site.wsgi:application  # your_site - главный модуль вашего приложения
+home            = /path/to/project/venv  # путь к вашему виртуальному окружению
+master          = True
+processes       = 4
+socket          = /path/to/projec/blog.sock  # путь к сокет-файлу
+# Если у Nginx не хватит прав для работы с сокет-файлом, включим chmod-socket, сначала пробуем 664, потом 666
+# chmod-socket    = 664
+vacuum          = True
+uid             = www-data
+gid             = www-data
+daemonize = /var/log/uwsgi/app/blog.ini  # пишем логи в этот файл
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Теперь мы можем запустить сервер приложений:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;uwsgi --ini uwsgi.ini
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;И так, проверяйте, все должно работать!&lt;/p&gt;
+
+&lt;p&gt;Последним штрихом будет добавление автоматического старта uWSGI при перезагрузке сервера:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# Редактируем файл /etc/rc.local
+/usr/local/bin/uwsgi --ini /path/to/project/uwsgi.ini
+exit 0
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;послесловие:8d6b9f4b89802d612e86db68bd3d4466&#34;&gt;Послесловие&lt;/h2&gt;
+
+&lt;p&gt;Обязательно найдется тот, кто спросит: почему uWSGI, а не Gunicorn? Ответ: это не был окончательный выбор в пользу uWSGI, в дальнейшем я хочу сравнить его с Gunicorn.&lt;/p&gt;
+
+&lt;p&gt;Надеюсь данное руководство хоть кому-то будет полезным. Спасибо всем, кто прочитал до конца!
+P.S. Буду рад вопросам, идеям и замечаниям в комментариях и подписчикам в моем &lt;a href=&#34;https://twitter.com/_alxpy&#34;&gt;мини-блоге&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

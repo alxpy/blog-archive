@@ -1,0 +1,14 @@
+baseurl = "http://alxpy.com/"
+languageCode = "ru"
+title = "alxpy.com"
+theme = "hugo-cactus-theme"
+
+publishdir = "../."
+
+googleAnalytics = ""
+disqusShortname = "alxpycom"
+
+[params]
+    name = "Alex Kuzmenko"
+    twitter = "_alxpy"
+    enableRSS = true

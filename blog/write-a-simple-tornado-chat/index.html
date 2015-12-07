@@ -1,0 +1,318 @@
+    <!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Alex Kuzmenko">
+		<meta name="description" content="">
+		<meta name="generator" content="Hugo 0.15" />
+		<title>Пишем простой чат на Tornado &middot; alxpy.com</title>
+		<link rel="shortcut icon" href="http://alxpy.com/images/favicon.ico">
+		<link rel="stylesheet" href="http://alxpy.com/css/style.css">
+		<link rel="stylesheet" href="http://alxpy.com/css/highlight.css">
+		
+		<link href="http://alxpy.com/index.xml" rel="alternate" type="application/rss+xml" title="alxpy.com" />
+		
+	</head>
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='http://alxpy.com/'> <span class="arrow">←</span>Home</a>
+	
+
+	
+		<a href='http://alxpy.com/about'>About</a>
+	
+
+	
+	<a class="cta" href="http://alxpy.com/index.xml">Subscribe</a>
+	
+</nav>
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>Пишем простой чат на Tornado</h1>
+                    <h2 class="headline">January 30, 2015</h2>
+                </header>
+                <section id="post-body">
+                    
+
+<p>В этой статье я попытаюсь рассказать о том, как написать очень простой чат на Tornado с использованием протокола WebSocket.</p>
+
+<blockquote>
+<p>Tornado — расширяемый, неблокирующий веб-сервер и фреймворк, написанный на Python.</p>
+</blockquote>
+
+<p>И так, начнем. Первым делом Вам необходимо установить Tornado (собственно, больше ничего устанавливать и не нужно):</p>
+
+<pre><code>$ mkdir chat
+$ cd chat/
+$ virtualenv -p /usr/bin/python3 venv
+$ . venv/bin/activate
+$ pip install tornado
+</code></pre>
+
+<p>Всё, все предварительные настройки готовы и мы можем начать писать код.</p>
+
+<p>Нам понадобятся седующие модули:</p>
+
+<pre><code>import os.path
+import tornado.ioloop
+import tornado.web
+import tornado.websocket
+import tornado.auth
+import tornado.gen
+</code></pre>
+
+<p>Что делает каждый из них, будет понятно дальше.</p>
+
+<h2 id="конфигурация-приложения:13e4dfdcef04281049fd1665679b3ddc">Конфигурация приложения</h2>
+
+<p>Создадим класс, описывающий наше приложение:</p>
+
+<pre><code>class Application(tornado.web.Application):
+    def __init__(self):
+        handlers = [
+            (r'/', MainHandler),
+            (r'/chat', ChatHandler),
+            (r'/ws', WebSocketHandler),
+            (r'/login', LoginHandler),
+            (r'/logout', LogoutHandler),
+        ]
+        settings = dict(
+            cookie_secret=&quot;your_cookie_secret&quot;,
+            template_path=os.path.join(os.path.dirname(__file__), 'templates'),
+            static_path=os.path.join(os.path.dirname(__file__), 'static'),
+            twitter_consumer_key='your_twitter_consumer_key',
+            twitter_consumer_secret='your_twitter_consumer_secret',
+            login_url='/',
+            xsrf_cookies=True,
+            debug=True,
+        )
+        tornado.web.Application.__init__(self, handlers, **settings)
+</code></pre>
+
+<p>В терминологии Django <code>handlers</code> (обработчик) это аналог <code>URLconf</code>, он указывает по какому адресу будет вызываться <code>handler</code> (<code>view</code> в Django).</p>
+
+<p><code>login_url</code> - адрес на который будет перенаправлен неизвестный пользователь, если попытается зайти на страницу, для которой нужна авторизация.</p>
+
+<p>В Tornado есть встроенная поддержка аутентификации и авторизации через Google, Facebook, Twitter и FriendFeed. Мы будем использовать Twitter. Для этого нам необходимо зарегистрировать свое приложение <a href="https://apps.twitter.com/app/new">тут</a>. При создании приложения, необходимо указать <code>Callback URL</code> - адрес на который будет перенапрвален пользователь после авторизации (в моем случае это 127.0.0.1:5000/login). После регистрации укажите в коде <code>twitter_consumer_key</code> и <code>twitter_consumer_secret</code>,   эти данные будут подставленны в запрос на сервер твиттера при авторизации.</p>
+
+<p><code>template_path</code> - путь к шаблонам, <code>static_path</code> - путь к статическим файлам (js, css). В этой статье я не буду рассказывать о шаблонизаторе Tornado.</p>
+
+<p><code>cookie_secret</code> - ключ для шифровки cookies, без него cookies можно было бы легко подделать. <code>xsrf_cookies=True</code> - включаем защиту от <a href="https://ru.wikipedia.org/wiki/%D0%9C%D0%B5%D0%B6%D1%81%D0%B0%D0%B9%D1%82%D0%BE%D0%B2%D0%B0%D1%8F_%D0%BF%D0%BE%D0%B4%D0%B4%D0%B5%D0%BB%D0%BA%D0%B0_%D0%B7%D0%B0%D0%BF%D1%80%D0%BE%D1%81%D0%B0">межсайтовой подделки запроса</a>.</p>
+
+<p>Во время разработки Вы постоянно правите код и, что-бы после каждой правки не перезапускать Ваше приложение вручную, можно указать Tornado делать это автоматически - <code>debug=True</code>.</p>
+
+<h2 id="создание-обработчиков:13e4dfdcef04281049fd1665679b3ddc">Создание обработчиков</h2>
+
+<p>Далее мы создадим базовый обработчик (handler):</p>
+
+<pre><code>class BaseHandler(tornado.web.RequestHandler):
+    def get_current_user(self):
+        user = self.get_secure_cookie('username')
+        if user:
+            user = user.decode('utf-8')
+        return user
+</code></pre>
+
+<p>Что бы создать обработчик, необходимо наследоваться от <code>tornado.web.RequestHandler</code>. Для определения текущего пользователя (current_user) служит <code>get_current_user()</code>.</p>
+
+<p>Обработчик главной страницы:</p>
+
+<pre><code>class MainHandler(BaseHandler):
+    def get(self):
+        if self.current_user:
+            self.redirect('/chat')
+        self.render('index.html')
+</code></pre>
+
+<p>Наследуемся от базового обработчика. Легко понять, что при GET-запросе (а каждый обработчик может обрабатывать одновременно GET/HEAD/POST запросы), в зависивости от того, вошел ли пользователь в систему или нет, ему либо будет показана страница входа/регистрации (index.html), либо он будет перенаправлен на страницу чата.</p>
+
+<p>При этом просто так зайти на страницу чата нельзя:</p>
+
+<pre><code>class ChatHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        self.render('chat.html', user=self.current_user)
+</code></pre>
+
+<p><code>@tornado.web.authenticated</code> &ldquo;пускает&rdquo; на страницу только &ldquo;вошедших&rdquo; пользователей, а остальных перенаправляет на <code>login_url</code>.</p>
+
+<p>Далее создадим обработчик для входа:</p>
+
+<pre><code>class LoginHandler(tornado.web.RequestHandler, tornado.auth.TwitterMixin):
+    @tornado.gen.coroutine
+    def get(self):
+        if self.get_argument(&quot;oauth_token&quot;, None):
+            user = yield self.get_authenticated_user()
+            self.set_secure_cookie('username', str(user['username']))
+            self.redirect(&quot;/chat&quot;)
+        else:
+            yield self.authorize_redirect()
+</code></pre>
+
+<p>Дополнительно наследуемся от <code>tornado.auth.TwitterMixin</code>, который служит для OAuth-аутентификации через Твиттер. При первом вызове обработчика он перенаправит нас на страницу Твиттера, а после авторизации Твиттер снова &ldquo;перекинет&rdquo;  нас на этот обработчик. Если запрос Твиттера содержал <code>oauth_token</code>, то мы создаем пользователя, устанавливаем cookie с его именем и делаем &ldquo;редирект&rdquo; на страницу чата. В противном случае, пользователя перекинет на страницу с формой/кнопкой входа.</p>
+
+<p><code>@tornado.gen.coroutine</code> - декоратор для асинхронных генераторов. Про декораторы и генераторы позже будет в отдельных статьх.</p>
+
+<p>В нашем случае, для выхода нужно всего лишь очистить cookies:</p>
+
+<pre><code>class LogoutHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.clear_all_cookies()
+        self.redirect(&quot;/&quot;)
+</code></pre>
+
+<h2 id="работа-с-websocket:13e4dfdcef04281049fd1665679b3ddc">Работа с WebSocket</h2>
+
+<blockquote>
+<p>WebSocket — протокол полнодуплексной связи поверх TCP-соединения, предназначенный для обмена сообщениями между браузером и веб-сервером в режиме реального времени.</p>
+</blockquote>
+
+<p>Если очень просто, то мы создаем канал между клиентом и сервером, держим его постоянно открытым и обмениваемся сообшениями. Создать канал очень просто:</p>
+
+<pre><code>var ws = new WebSocket(&quot;ws://127.0.0.1:5000/ws&quot;);
+</code></pre>
+
+<p>Теперь для отправки сообщений мы вызываем <code>ws.send(msg)</code>, где msg - переменная с текстом сообщения. <code>ws.onmessage = function (evt) { ... }</code> - функция, которая обрабатывает входящие собщения.</p>
+
+<p>На стороне сервера с WebSocket работает обработчик наследованный от BaseHandler и <code>tornado.websocket.WebSocketHandler</code>:</p>
+
+<pre><code>class WebSocketHandler(BaseHandler, tornado.websocket.WebSocketHandler):
+    connections = set()
+
+    def open(self):
+        WebSocketHandler.connections.add(self)
+
+    def on_close(self):
+        WebSocketHandler.connections.remove(self)
+
+    def on_message(self, msg):
+        self.send_messages(msg)
+
+    def send_messages(self, msg):
+        for conn in self.connections:
+            conn.write_message({'name': self.current_user, 'msg': msg})
+</code></pre>
+
+<p><code>open</code> и <code>on_close</code> пополняют список соединений (connections) новым каналом и удалют канал из списка при его закрытии. <code>on_message</code> - реагирует на входящее сообщение, <code>write_message()</code> отправляет сообщение указанному соединению (conn). Если вдруг можно отослать сообщение сразу по всем каналом, подскажите, пожалуйста, в комментариях как это сделать.</p>
+
+<h2 id="запуск-приложения:13e4dfdcef04281049fd1665679b3ddc">Запуск приложения</h2>
+
+<p>Тут все просто: создаем объект нашего приложения и говорим какой порт ему слушать (если в окружении нет параметра &lsquo;PORT&rsquo;, то 5000й):</p>
+
+<pre><code>def main():
+    port = int(os.environ.get(&quot;PORT&quot;, 5000))
+    app = Application()
+    app.listen(port)
+    tornado.ioloop.IOLoop.instance().start()
+
+if __name__ == '__main__':
+    main()
+</code></pre>
+
+<p>Создаем экземпляр основной петли ввода/вывода <code>tornado.ioloop.IOLoop</code> и запускаем его.</p>
+
+<h2 id="ссылки:13e4dfdcef04281049fd1665679b3ddc">Ссылки</h2>
+
+<p>Полный код - <a href="https://github.com/alxpy/simple-tornado-chat/tree/0.2">https://github.com/alxpy/simple-tornado-chat/tree/0.2</a></p>
+
+<p>Документация по Tornado - <a href="http://www.tornadoweb.org/en/stable/">http://www.tornadoweb.org/en/stable/</a></p>
+
+<h2 id="послесловие:13e4dfdcef04281049fd1665679b3ddc">Послесловие</h2>
+
+<p>Получилось сумбурно, но надеюсь в целом понятно. Если есть дополнительные вопросы, задавайте их в комментариях и я постараюсь ответить.</p>
+
+<p>P.S. Буду рад вопросам, идеям и замечаниям в комментариях и подписчикам в моем <a href="https://twitter.com/_alxpy">мини-блоге</a>.</p>
+
+                </section>
+            </article>
+            <footer id="post-meta" class="clearfix">
+                <a href="https://twitter.com/_alxpy">
+                        <img class="avatar" src="http://alxpy.com/images/avatar.png">
+                        <div>
+                            <span class="dark">Alex Kuzmenko</span>
+                            <span></span>
+                        </div>
+                    </a>
+                <section id="sharing">
+                    <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2falxpy.com%2fblog%2fwrite-a-simple-tornado-chat%2f - %d0%9f%d0%b8%d1%88%d0%b5%d0%bc%20%d0%bf%d1%80%d0%be%d1%81%d1%82%d0%be%d0%b9%20%d1%87%d0%b0%d1%82%20%d0%bd%d0%b0%20Tornado by @_alxpy"><span class="icon-twitter"> Tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+                </section>
+            </footer>
+
+            <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'alxpycom';
+    var disqus_identifier = 'http:\/\/alxpy.com\/blog\/write-a-simple-tornado-chat\/';
+    var disqus_title = 'Пишем простой чат на Tornado';
+    var disqus_url = 'http:\/\/alxpy.com\/blog\/write-a-simple-tornado-chat\/';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+            <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+    
+    
+        
+        <li>
+            <a href="http://alxpy.com/blog/custom-field-types-in-sqlalchemy/">Собственные типы полей в SQLAlchemy<aside class="dates">May 3</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="http://alxpy.com/blog/write-a-simple-tornado-chat/">Пишем простой чат на Tornado<aside class="dates">Jan 30</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="http://alxpy.com/blog/killer-features-of-python-3/">Киллер-фичи Python 3<aside class="dates">Jan 22</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="http://alxpy.com/blog/django-uwsgi-nginx/">Готовим Django: uWSGI &#43; Nginx<aside class="dates">Jan 12</aside></a>
+        </li>
+        
+   
+</ul>
+            <footer id="footer">
+    <p class="small">
+        © Copyright 2015 Alex Kuzmenko
+    </p>
+</footer>
+        </section>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="http://alxpy.com/js/main.js"></script>
+<script src="http://alxpy.com/js/highlight.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+    </body>
+</html>
