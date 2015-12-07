@@ -2,19 +2,34 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>alxpy.com</title>
-    <link>http://alxpy.com/</link>
+    <link>https://alxpy.github.io/</link>
     <description>Recent content on alxpy.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ru</language>
-    <lastBuildDate>Sun, 03 May 2015 00:00:00 +0000</lastBuildDate>
-    <atom:link href="http://alxpy.com/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 07 Dec 2015 01:59:33 +0200</lastBuildDate>
+    <atom:link href="https://alxpy.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>about</title>
+      <link>https://alxpy.github.io/about/</link>
+      <pubDate>Mon, 07 Dec 2015 01:59:33 +0200</pubDate>
+      
+      <guid>https://alxpy.github.io/about/</guid>
+      <description>&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>Собственные типы полей в SQLAlchemy</title>
-      <link>http://alxpy.com/blog/custom-field-types-in-sqlalchemy/</link>
+      <link>https://alxpy.github.io/blog/custom-field-types-in-sqlalchemy/</link>
       <pubDate>Sun, 03 May 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://alxpy.com/blog/custom-field-types-in-sqlalchemy/</guid>
+      <guid>https://alxpy.github.io/blog/custom-field-types-in-sqlalchemy/</guid>
       <description>&lt;p&gt;Часто возникает необходимость хранить в БД статус модели. При этом необходимо оптимально хранить статус в базе и удобно работать с ним в коде. Я покажу как это сделать с использованием собственных типов полей в SQLAlchemy.&lt;/p&gt;
 
 &lt;p&gt;Допустим у нас есть простая модель юзера:&lt;/p&gt;
@@ -95,10 +110,10 @@
     
     <item>
       <title>Пишем простой чат на Tornado</title>
-      <link>http://alxpy.com/blog/write-a-simple-tornado-chat/</link>
+      <link>https://alxpy.github.io/blog/write-a-simple-tornado-chat/</link>
       <pubDate>Fri, 30 Jan 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://alxpy.com/blog/write-a-simple-tornado-chat/</guid>
+      <guid>https://alxpy.github.io/blog/write-a-simple-tornado-chat/</guid>
       <description>
 
 &lt;p&gt;В этой статье я попытаюсь рассказать о том, как написать очень простой чат на Tornado с использованием протокола WebSocket.&lt;/p&gt;
@@ -294,10 +309,10 @@ if __name__ == &#39;__main__&#39;:
     
     <item>
       <title>Киллер-фичи Python 3</title>
-      <link>http://alxpy.com/blog/killer-features-of-python-3/</link>
+      <link>https://alxpy.github.io/blog/killer-features-of-python-3/</link>
       <pubDate>Thu, 22 Jan 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://alxpy.com/blog/killer-features-of-python-3/</guid>
+      <guid>https://alxpy.github.io/blog/killer-features-of-python-3/</guid>
       <description>
 
 &lt;p&gt;Когда человек впервые смотрит на различия Python 2 и Python 3, то первым делом он замечает, что &lt;code&gt;print()&lt;/code&gt; теперь функция, а не оператор. Я хочу показать немного больше отличий, что бы Вы понимали, что пора переходить на свежую версию Python.&lt;/p&gt;
@@ -405,10 +420,10 @@ Python 3 приобрел массу крутых плюшек и однозна
     
     <item>
       <title>Готовим Django: uWSGI &#43; Nginx</title>
-      <link>http://alxpy.com/blog/django-uwsgi-nginx/</link>
+      <link>https://alxpy.github.io/blog/django-uwsgi-nginx/</link>
       <pubDate>Mon, 12 Jan 2015 00:00:00 +0000</pubDate>
       
-      <guid>http://alxpy.com/blog/django-uwsgi-nginx/</guid>
+      <guid>https://alxpy.github.io/blog/django-uwsgi-nginx/</guid>
       <description>
 
 &lt;p&gt;На просторах интернета есть масса статей о том, как деплоить Django, используя различные серверы приложений. Статьи хороши, но все же при деплои  этого блога (изначально блог работал на Django), ни одна из них не ответила полностью на все вопросы. Я хочу поделиться тем, как это сделал я. Упор будем делать на простоту.&lt;/p&gt;

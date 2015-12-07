@@ -2,28 +2,33 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://alxpy.com/</loc>
-    <lastmod>2015-05-03T00:00:00+00:00</lastmod>
+    <loc>https://alxpy.github.io/</loc>
+    <lastmod>2015-12-07T01:59:33+02:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>http://alxpy.com/blog/custom-field-types-in-sqlalchemy/</loc>
+    <loc>https://alxpy.github.io/about/</loc>
+    <lastmod>2015-12-07T01:59:33+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://alxpy.github.io/blog/custom-field-types-in-sqlalchemy/</loc>
     <lastmod>2015-05-03T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>http://alxpy.com/blog/write-a-simple-tornado-chat/</loc>
+    <loc>https://alxpy.github.io/blog/write-a-simple-tornado-chat/</loc>
     <lastmod>2015-01-30T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>http://alxpy.com/blog/killer-features-of-python-3/</loc>
+    <loc>https://alxpy.github.io/blog/killer-features-of-python-3/</loc>
     <lastmod>2015-01-22T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>http://alxpy.com/blog/django-uwsgi-nginx/</loc>
+    <loc>https://alxpy.github.io/blog/django-uwsgi-nginx/</loc>
     <lastmod>2015-01-12T00:00:00+00:00</lastmod>
   </url>
   
