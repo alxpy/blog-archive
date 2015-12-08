@@ -5,10 +5,8 @@ theme = "hugo-cactus-theme"
 
 publishdir = "../."
 
-googleAnalytics = ""
-disqusShortname = "alxpycom"
-
 [params]
     name = "Alex Kuzmenko"
     twitter = "_alxpy"
     enableRSS = true
+    disqusShortname = "alxpycom"
