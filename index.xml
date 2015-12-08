@@ -6,23 +6,8 @@
     <description>Recent content on alxpy.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ru</language>
-    <lastBuildDate>Mon, 07 Dec 2015 01:59:33 +0200</lastBuildDate>
+    <lastBuildDate>Sun, 03 May 2015 00:00:00 +0000</lastBuildDate>
     <atom:link href="http://alxpy.com/index.xml" rel="self" type="application/rss+xml" />
-    
-    <item>
-      <title>about</title>
-      <link>http://alxpy.com/about/</link>
-      <pubDate>Mon, 07 Dec 2015 01:59:33 +0200</pubDate>
-      
-      <guid>http://alxpy.com/about/</guid>
-      <description>&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
-cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
-proident, sunt in culpa qui officia deserunt mollit anim id est laborum.&lt;/p&gt;
-</description>
-    </item>
     
     <item>
       <title>Собственные типы полей в SQLAlchemy</title>
