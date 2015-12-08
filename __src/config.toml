@@ -9,4 +9,4 @@ publishdir = "../."
     name = "Alex Kuzmenko"
     twitter = "_alxpy"
     enableRSS = true
-    disqusShortname = "alxpycom"
+    disqusShortname = "alxblogpy"
