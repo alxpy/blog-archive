@@ -8,26 +8,32 @@
 		<meta name="description" content="">
 		<meta name='yandex-verification' content='70cab7b02c56d428' />
 		<meta name="google-site-verification" content="TBJBu9d86csWI4ucJcGf2csveWDb8zw6dcLVYp1pO10" />
-		<meta name="generator" content="Hugo 0.15" />
+		<script type="text/javascript">
+			if (window.location.host === "alxpy.com" && window.location.protocol !== "https:") {
+				window.location.protocol = "https"
+			}
+		</script>
+		<meta name="generator" content="Hugo 0.17" />
 		<title>Готовим Django: uWSGI &#43; Nginx &middot; alxpy.com</title>
-		<link rel="shortcut icon" href="http://alxpy.com/images/favicon.ico">
-		<link rel="stylesheet" href="http://alxpy.com/css/style.css">
-		<link rel="stylesheet" href="http://alxpy.com/css/highlight.css">
+		<link rel="shortcut icon" href="https://alxpy.com/images/favicon.ico">
+		<link rel="stylesheet" href="https://alxpy.com/css/style.css">
+		<link rel="stylesheet" href="https://alxpy.com/css/highlight.css">
 		
-		<link href="http://alxpy.com/index.xml" rel="alternate" type="application/rss+xml" title="alxpy.com" />
+		<link href="https://alxpy.com/index.xml" rel="alternate" type="application/rss+xml" title="alxpy.com" />
 		
 	</head>
+
     <body>
        <nav class="main-nav">
 	
 	
-		<a href='http://alxpy.com/'> <span class="arrow">←</span>Home</a>
+		<a href='https://alxpy.com/'> <span class="arrow">←</span>Home</a>
 	
 
 	
 
 	
-	<a class="cta" href="http://alxpy.com/index.xml">Subscribe</a>
+	<a class="cta" href="https://alxpy.com/index.xml">Subscribe</a>
 	
 </nav>
 
@@ -44,7 +50,7 @@
 
 <p>Итак допустим, что у вас уже есть готовое Django-приложение на вашей локальной машине, файл <code>requirements.txt</code> с прописанными в нем зависимостями (используемыми библиотеками), арендованный VPS и что вы умеете работать с консолью.</p>
 
-<h2 id="первоначальные-настройки:8d6b9f4b89802d612e86db68bd3d4466">Первоначальные настройки</h2>
+<h2 id="первоначальные-настройки">Первоначальные настройки</h2>
 
 <p>Первым делом, зайдем на сервер и обновим пакеты:</p>
 
@@ -79,7 +85,7 @@ git config --global user.name &quot;John Doe&quot;
 git config --global user.email johndoe@example.com
 </code></pre>
 
-<h2 id="настроим-бд:8d6b9f4b89802d612e86db68bd3d4466">Настроим БД</h2>
+<h2 id="настроим-бд">Настроим БД</h2>
 
 <p>Как БД будем использовать PostgreSQL (по рекомендации разработчиков Django):</p>
 
@@ -114,7 +120,7 @@ sudo apt-get install postgresql postgresql-contrib
 
 <p>Выйдем из консольного интерфейса PostgreSQL и вернемся к первоначальному пользователю системы: для этого 2 раза нажмем <code>Ctrl + D</code>.</p>
 
-<h2 id="зальем-приложение-на-сервер:8d6b9f4b89802d612e86db68bd3d4466">Зальем приложение на сервер</h2>
+<h2 id="зальем-приложение-на-сервер">Зальем приложение на сервер</h2>
 
 <p>Первым делом необходимо будет сделать некоторые правки нашего приложения.</p>
 
@@ -185,7 +191,7 @@ pip install psycopg2  # библиотека для работы Django с Postg
 
 <p>Теперь ваш код почти говтов к работе.</p>
 
-<h2 id="конфигурация-nginx-и-uwsgi:8d6b9f4b89802d612e86db68bd3d4466">Конфигурация Nginx и  uWSGI</h2>
+<h2 id="конфигурация-nginx-и-uwsgi">Конфигурация Nginx и  uWSGI</h2>
 
 <p>Скопируйте файл <a href="https://github.com/nginx/nginx/blob/master/conf/uwsgi_params">https://github.com/nginx/nginx/blob/master/conf/uwsgi_params</a> в корень вашего проекта.</p>
 
@@ -263,7 +269,7 @@ daemonize = /var/log/uwsgi/app/blog.ini  # пишем логи в этот фа�
 exit 0
 </code></pre>
 
-<h2 id="послесловие:8d6b9f4b89802d612e86db68bd3d4466">Послесловие</h2>
+<h2 id="послесловие">Послесловие</h2>
 
 <p>Обязательно найдется тот, кто спросит: почему uWSGI, а не Gunicorn? Ответ: это не был окончательный выбор в пользу uWSGI, в дальнейшем я хочу сравнить его с Gunicorn.</p>
 
@@ -274,14 +280,14 @@ P.S. Буду рад вопросам, идеям и замечаниям в к�
             </article>
             <footer id="post-meta" class="clearfix">
                 <a href="https://twitter.com/_alxpy">
-                        <img class="avatar" src="http://alxpy.com/images/avatar.png">
+                        <img class="avatar" src="https://alxpy.com/images/avatar.png">
                         <div>
                             <span class="dark">Alex Kuzmenko</span>
                             <span></span>
                         </div>
                     </a>
                 <section id="sharing">
-                    <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2falxpy.com%2fblog%2fdjango-uwsgi-nginx%2f - %d0%93%d0%be%d1%82%d0%be%d0%b2%d0%b8%d0%bc%20Django%3a%20uWSGI%20%2b%20Nginx by @_alxpy"><span class="icon-twitter"> Tweet</span></a>
+                    <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2falxpy.com%2fblog%2fdjango-uwsgi-nginx%2f - %d0%93%d0%be%d1%82%d0%be%d0%b2%d0%b8%d0%bc%20Django%3a%20uWSGI%20%2b%20Nginx by @_alxpy"><span class="icon-twitter"> Tweet</span></a>
 
 <a class="facebook" href="#" onclick="
     window.open(
@@ -314,42 +320,42 @@ P.S. Буду рад вопросам, идеям и замечаниям в к�
     
         
         <li>
-            <a href="http://alxpy.com/blog/custom-field-types-in-sqlalchemy/">Собственные типы полей в SQLAlchemy<aside class="dates">May 3</aside></a>
+            <a href="https://alxpy.com/blog/custom-field-types-in-sqlalchemy/">Собственные типы полей в SQLAlchemy<aside class="dates">May 3</aside></a>
         </li>
         
    
     
         
         <li>
-            <a href="http://alxpy.com/blog/write-a-simple-tornado-chat/">Пишем простой чат на Tornado<aside class="dates">Jan 30</aside></a>
+            <a href="https://alxpy.com/blog/write-a-simple-tornado-chat/">Пишем простой чат на Tornado<aside class="dates">Jan 30</aside></a>
         </li>
         
    
     
         
         <li>
-            <a href="http://alxpy.com/blog/killer-features-of-python-3/">Киллер-фичи Python 3<aside class="dates">Jan 22</aside></a>
+            <a href="https://alxpy.com/blog/killer-features-of-python-3/">Киллер-фичи Python 3<aside class="dates">Jan 22</aside></a>
         </li>
         
    
     
         
         <li>
-            <a href="http://alxpy.com/blog/django-uwsgi-nginx/">Готовим Django: uWSGI &#43; Nginx<aside class="dates">Jan 12</aside></a>
+            <a href="https://alxpy.com/blog/django-uwsgi-nginx/">Готовим Django: uWSGI &#43; Nginx<aside class="dates">Jan 12</aside></a>
         </li>
         
    
 </ul>
             <footer id="footer">
     <p class="small">
-        © Copyright 2015 Alex Kuzmenko
+        © Copyright 2016 Alex Kuzmenko
     </p>
 </footer>
         </section>
 
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<script src="http://alxpy.com/js/main.js"></script>
-<script src="http://alxpy.com/js/highlight.js"></script>
+<script src="https://alxpy.com/js/main.js"></script>
+<script src="https://alxpy.com/js/highlight.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
 
 

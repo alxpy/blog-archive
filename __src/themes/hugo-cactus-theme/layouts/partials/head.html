@@ -8,6 +8,11 @@
 		<meta name="description" content="{{ with .Site.Params.description }}{{ . }}{{ end }}">
 		<meta name='yandex-verification' content='70cab7b02c56d428' />
 		<meta name="google-site-verification" content="TBJBu9d86csWI4ucJcGf2csveWDb8zw6dcLVYp1pO10" />
+		<script type="text/javascript">
+			if (window.location.host === "alxpy.com" && window.location.protocol !== "https:") {
+				window.location.protocol = "https"
+			}
+		</script>
 		{{ .Hugo.Generator }}
 		<title>{{ .Title }} &middot; {{ .Site.Title }}</title>
 		<link rel="shortcut icon" href="{{ .Site.BaseURL }}images/favicon.ico">
