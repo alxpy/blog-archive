@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Blog-archives on alxpy.com</title>
-    <link>https://alxpy.com/blog-archive/</link>
+    <link>https://alxpy.com/blog-archive/blog-archive/</link>
     <description>Recent content in Blog-archives on alxpy.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ru</language>
     <lastBuildDate>Sun, 03 May 2015 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://alxpy.com/blog-archive/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://alxpy.com/blog-archive/blog-archive/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>Собственные типы полей в SQLAlchemy</title>
-      <link>https://alxpy.com/blog-archive/custom-field-types-in-sqlalchemy/</link>
+      <link>https://alxpy.com/blog-archive/blog-archive/custom-field-types-in-sqlalchemy/</link>
       <pubDate>Sun, 03 May 2015 00:00:00 +0000</pubDate>
       
-      <guid>https://alxpy.com/blog-archive/custom-field-types-in-sqlalchemy/</guid>
+      <guid>https://alxpy.com/blog-archive/blog-archive/custom-field-types-in-sqlalchemy/</guid>
       <description>&lt;p&gt;Часто возникает необходимость хранить в БД статус модели. При этом необходимо оптимально хранить статус в базе и удобно работать с ним в коде. Я покажу как это сделать с использованием собственных типов полей в SQLAlchemy.&lt;/p&gt;
 
 &lt;p&gt;Допустим у нас есть простая модель юзера:&lt;/p&gt;
@@ -95,10 +95,10 @@
     
     <item>
       <title>Пишем простой чат на Tornado</title>
-      <link>https://alxpy.com/blog-archive/write-a-simple-tornado-chat/</link>
+      <link>https://alxpy.com/blog-archive/blog-archive/write-a-simple-tornado-chat/</link>
       <pubDate>Fri, 30 Jan 2015 00:00:00 +0000</pubDate>
       
-      <guid>https://alxpy.com/blog-archive/write-a-simple-tornado-chat/</guid>
+      <guid>https://alxpy.com/blog-archive/blog-archive/write-a-simple-tornado-chat/</guid>
       <description>
 
 &lt;p&gt;В этой статье я попытаюсь рассказать о том, как написать очень простой чат на Tornado с использованием протокола WebSocket.&lt;/p&gt;
@@ -294,10 +294,10 @@ if __name__ == &#39;__main__&#39;:
     
     <item>
       <title>Киллер-фичи Python 3</title>
-      <link>https://alxpy.com/blog-archive/killer-features-of-python-3/</link>
+      <link>https://alxpy.com/blog-archive/blog-archive/killer-features-of-python-3/</link>
       <pubDate>Thu, 22 Jan 2015 00:00:00 +0000</pubDate>
       
-      <guid>https://alxpy.com/blog-archive/killer-features-of-python-3/</guid>
+      <guid>https://alxpy.com/blog-archive/blog-archive/killer-features-of-python-3/</guid>
       <description>
 
 &lt;p&gt;Когда человек впервые смотрит на различия Python 2 и Python 3, то первым делом он замечает, что &lt;code&gt;print()&lt;/code&gt; теперь функция, а не оператор. Я хочу показать немного больше отличий, что бы Вы понимали, что пора переходить на свежую версию Python.&lt;/p&gt;
@@ -405,10 +405,10 @@ Python 3 приобрел массу крутых плюшек и однозна
     
     <item>
       <title>Готовим Django: uWSGI &#43; Nginx</title>
-      <link>https://alxpy.com/blog-archive/django-uwsgi-nginx/</link>
+      <link>https://alxpy.com/blog-archive/blog-archive/django-uwsgi-nginx/</link>
       <pubDate>Mon, 12 Jan 2015 00:00:00 +0000</pubDate>
       
-      <guid>https://alxpy.com/blog-archive/django-uwsgi-nginx/</guid>
+      <guid>https://alxpy.com/blog-archive/blog-archive/django-uwsgi-nginx/</guid>
       <description>
 
 &lt;p&gt;На просторах интернета есть масса статей о том, как деплоить Django, используя различные серверы приложений. Статьи хороши, но все же при деплои  этого блога (изначально блог работал на Django), ни одна из них не ответила полностью на все вопросы. Я хочу поделиться тем, как это сделал я. Упор будем делать на простоту.&lt;/p&gt;

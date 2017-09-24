@@ -1,4 +1,4 @@
-baseurl = "https://alxpy.com/"
+baseurl = "https://alxpy.com/blog-archive/"
 languageCode = "ru"
 title = "alxpy.com"
 theme = "hugo-cactus-theme"
