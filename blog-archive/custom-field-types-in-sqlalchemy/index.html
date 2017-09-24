@@ -1,0 +1,207 @@
+    <!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Alex Kuzmenko">
+		<meta name="description" content="">
+		<meta name='yandex-verification' content='70cab7b02c56d428' />
+		<meta name="google-site-verification" content="TBJBu9d86csWI4ucJcGf2csveWDb8zw6dcLVYp1pO10" />
+		<script type="text/javascript">
+			if (window.location.host === "alxpy.com" && window.location.protocol !== "https:") {
+				window.location.protocol = "https"
+			}
+		</script>
+		<meta name="generator" content="Hugo 0.16-DEV" />
+		<title>Собственные типы полей в SQLAlchemy &middot; alxpy.com</title>
+		<link rel="shortcut icon" href="https://alxpy.com/images/favicon.ico">
+		<link rel="stylesheet" href="https://alxpy.com/css/style.css">
+		<link rel="stylesheet" href="https://alxpy.com/css/highlight.css">
+		
+		<link href="https://alxpy.com/index.xml" rel="alternate" type="application/rss+xml" title="alxpy.com" />
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://alxpy.com/'> <span class="arrow">←</span>Home</a>
+	
+
+	
+
+	
+	<a class="cta" href="https://alxpy.com/index.xml">Subscribe</a>
+	
+</nav>
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>Собственные типы полей в SQLAlchemy</h1>
+                    <h2 class="headline">May 3, 2015</h2>
+                </header>
+                <section id="post-body">
+                    <p>Часто возникает необходимость хранить в БД статус модели. При этом необходимо оптимально хранить статус в базе и удобно работать с ним в коде. Я покажу как это сделать с использованием собственных типов полей в SQLAlchemy.</p>
+
+<p>Допустим у нас есть простая модель юзера:</p>
+
+<pre><code>class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(80))
+
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+       return '&lt;User: {}&gt;'.format(self.name)
+</code></pre>
+
+<p>Правильный способ решения задачи это хранить в базе числовое значение. Если просто запомнить какое число отвечает какому статусу, то в коде мгновенно начнут появляться ошибки. Использование констант решает это проблему (<code>STATUS_ACTIVE = 0</code>, <code>user.status = user.STATUS_ACTIVE</code>), но такое решение все равно не достаточно красиво и заставляет создавать отдельные словари для хранения текстового отображения статусов. В Python 3.4 появились удобные типы <a href="https://docs.python.org/3/library/enum.html">Emun/IntEnum</a>, которые мы будем использовать для описания статусов. Создадим атрибут модели:</p>
+
+<pre><code>STATUS = IntEnum('UserStatus', {
+    'active': 0,
+    'deleted': 1,
+})
+</code></pre>
+
+<p>Для наглядности покажу как работать с Enum:</p>
+
+<pre><code>&gt;&gt;&gt; STATUS.active
+&lt;UserStatus.active: 0&gt;
+&gt;&gt;&gt; STATUS.active.value
+0
+&gt;&gt;&gt; STATUS.active.name
+'active'
+&gt;&gt;&gt; STATUS(1)
+&lt;UserStatus.deleted: 1&gt;
+&gt;&gt;&gt; STATUS(1).name
+'deleted'
+</code></pre>
+
+<p>В SQLAlchemy есть специальный тип <code>TypeDecorator</code>, на основе которого можно создать собственный тип поля:</p>
+
+<pre><code>class EnumType(TypeDecorator):
+    impl = SmallInteger
+
+    def __init__(self, enum, *args, **kwargs):
+        self._enum = enum
+        TypeDecorator.__init__(self, *args, **kwargs)
+
+    def process_bind_param(self, enum, dialect):
+        return enum.value
+
+    def process_result_value(self, value, dialect):
+        return self._enum(value)
+</code></pre>
+
+<p>Создадим у юзера поля status, созданного нами, типа <code>EnumType</code>:</p>
+
+<pre><code>class User(Base):
+    __tablename__ = 'users'
+
+    STATUS = IntEnum('UserStatus', {
+        'active': 0,
+        'deleted': 1,
+    })
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(80))
+    status = Column(EnumType(STATUS), default=STATUS.active)
+
+    ...
+</code></pre>
+
+<p>Работать это будет таким образом: реальное поле в базе будет типа <code>SmallInteger</code>.  Когда мы присваиваем статусу юзера значение <code>STATUS.active</code>, метод <code>process_bind_param()</code> будет писать в базу <code>STATUS.active.value</code>, а при чтении из базы метод <code>process_result_value()</code> буде возвращать <code>STATUS.active</code> (мне так было удобнее, можно возвращать и <code>STATUS.active.name</code>). Это, собственно, все.</p>
+
+<p>P.S. Буду рад вопросам, идеям и замечаниям в комментариях и подписчикам в моем <a href="https://twitter.com/_alxpy">мини-блоге</a>.</p>
+
+                </section>
+            </article>
+            <footer id="post-meta" class="clearfix">
+                <a href="https://twitter.com/_alxpy">
+                        <img class="avatar" src="https://alxpy.com/images/avatar.png">
+                        <div>
+                            <span class="dark">Alex Kuzmenko</span>
+                            <span></span>
+                        </div>
+                    </a>
+                <section id="sharing">
+                    <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2falxpy.com%2fblog-archive%2fcustom-field-types-in-sqlalchemy%2f - %d0%a1%d0%be%d0%b1%d1%81%d1%82%d0%b2%d0%b5%d0%bd%d0%bd%d1%8b%d0%b5%20%d1%82%d0%b8%d0%bf%d1%8b%20%d0%bf%d0%be%d0%bb%d0%b5%d0%b9%20%d0%b2%20SQLAlchemy by @_alxpy"><span class="icon-twitter"> Tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+                </section>
+            </footer>
+
+            <section class="disqus">
+                <div id="disqus_thread"></div>
+                <script type="text/javascript">
+                    var disqus_shortname = 'alxblogpy';
+                    (function() {
+                        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                        dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+                        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                    })();
+                </script>
+                <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                <a href="//disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+            </section>
+
+            <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+    
+    
+        
+        <li>
+            <a href="https://alxpy.com/blog-archive/custom-field-types-in-sqlalchemy/">Собственные типы полей в SQLAlchemy<aside class="dates">May 3</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="https://alxpy.com/blog-archive/write-a-simple-tornado-chat/">Пишем простой чат на Tornado<aside class="dates">Jan 30</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="https://alxpy.com/blog-archive/killer-features-of-python-3/">Киллер-фичи Python 3<aside class="dates">Jan 22</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="https://alxpy.com/blog-archive/django-uwsgi-nginx/">Готовим Django: uWSGI &#43; Nginx<aside class="dates">Jan 12</aside></a>
+        </li>
+        
+   
+</ul>
+            <footer id="footer">
+    <p class="small">
+        © Copyright 2017 Alex Kuzmenko
+    </p>
+</footer>
+        </section>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://alxpy.com/js/main.js"></script>
+<script src="https://alxpy.com/js/highlight.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+    </body>
+</html>

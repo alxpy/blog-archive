@@ -1,0 +1,363 @@
+    <!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Alex Kuzmenko">
+		<meta name="description" content="">
+		<meta name='yandex-verification' content='70cab7b02c56d428' />
+		<meta name="google-site-verification" content="TBJBu9d86csWI4ucJcGf2csveWDb8zw6dcLVYp1pO10" />
+		<script type="text/javascript">
+			if (window.location.host === "alxpy.com" && window.location.protocol !== "https:") {
+				window.location.protocol = "https"
+			}
+		</script>
+		<meta name="generator" content="Hugo 0.16-DEV" />
+		<title>Готовим Django: uWSGI &#43; Nginx &middot; alxpy.com</title>
+		<link rel="shortcut icon" href="https://alxpy.com/images/favicon.ico">
+		<link rel="stylesheet" href="https://alxpy.com/css/style.css">
+		<link rel="stylesheet" href="https://alxpy.com/css/highlight.css">
+		
+		<link href="https://alxpy.com/index.xml" rel="alternate" type="application/rss+xml" title="alxpy.com" />
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://alxpy.com/'> <span class="arrow">←</span>Home</a>
+	
+
+	
+
+	
+	<a class="cta" href="https://alxpy.com/index.xml">Subscribe</a>
+	
+</nav>
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>Готовим Django: uWSGI &#43; Nginx</h1>
+                    <h2 class="headline">January 12, 2015</h2>
+                </header>
+                <section id="post-body">
+                    
+
+<p>На просторах интернета есть масса статей о том, как деплоить Django, используя различные серверы приложений. Статьи хороши, но все же при деплои  этого блога (изначально блог работал на Django), ни одна из них не ответила полностью на все вопросы. Я хочу поделиться тем, как это сделал я. Упор будем делать на простоту.</p>
+
+<p>Итак допустим, что у вас уже есть готовое Django-приложение на вашей локальной машине, файл <code>requirements.txt</code> с прописанными в нем зависимостями (используемыми библиотеками), арендованный VPS и что вы умеете работать с консолью.</p>
+
+<h2 id="первоначальные-настройки:8d6b9f4b89802d612e86db68bd3d4466">Первоначальные настройки</h2>
+
+<p>Первым делом, зайдем на сервер и обновим пакеты:</p>
+
+<pre><code>ssh user@server
+sudo apt-get update
+sudo apt-get upgrade
+</code></pre>
+
+<p>Установим Nginx:</p>
+
+<pre><code>sudo apt-get install nginx
+</code></pre>
+
+<p>Это очень быстрый и легкий прокси-сервер. Он будет раздавать статику вашего сайта и взаимодействовать с сервером приложений. Сервером приложений будет выступать uWSGI. Именно он будет запускать Django-приложение.</p>
+
+<p>Установим uWSGI:</p>
+
+<pre><code>sudo apt-get install python3-pip # менеджер пакетов для Python 3
+sudo pip install uwsgi
+</code></pre>
+
+<p>Установим утилиту для создания виртуального окружения:</p>
+
+<pre><code>sudo apt-get install python-virtualenv
+</code></pre>
+
+<p>Ну, и не будем же мы заливать приложения на сервер по ftp, в самом деле? Так что установим git:</p>
+
+<pre><code>sudo apt-get install git
+# минимальная настройка:
+git config --global user.name &quot;John Doe&quot;
+git config --global user.email johndoe@example.com
+</code></pre>
+
+<h2 id="настроим-бд:8d6b9f4b89802d612e86db68bd3d4466">Настроим БД</h2>
+
+<p>Как БД будем использовать PostgreSQL (по рекомендации разработчиков Django):</p>
+
+<pre><code>sudo apt-get install libpq-dev python-dev
+sudo apt-get install postgresql postgresql-contrib
+</code></pre>
+
+<p>Сменим пользователя системы:</p>
+
+<pre><code>sudo su - postgres
+</code></pre>
+
+<p>Создадим БД для нашего сайта:</p>
+
+<pre><code>createdb your_blog_db
+</code></pre>
+
+<p>Создадим пользователя БД:</p>
+
+<pre><code>createuser -P your_db_user
+</code></pre>
+
+<p>Входим в консольный интерфейс PostgreSQL:</p>
+
+<pre><code>psql
+</code></pre>
+
+<p>и даем нашему пользователю права на работу с нашей базой:</p>
+
+<pre><code>GRANT ALL PRIVILEGES ON DATABASE yout_blog_db TO your_db_user;
+</code></pre>
+
+<p>Выйдем из консольного интерфейса PostgreSQL и вернемся к первоначальному пользователю системы: для этого 2 раза нажмем <code>Ctrl + D</code>.</p>
+
+<h2 id="зальем-приложение-на-сервер:8d6b9f4b89802d612e86db68bd3d4466">Зальем приложение на сервер</h2>
+
+<p>Первым делом необходимо будет сделать некоторые правки нашего приложения.</p>
+
+<p>Настроить новую БД в файле settings.py вашего проекта:</p>
+
+<pre><code>DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'your_blog_db',
+        'USER': 'your_db_user',
+        'PASSWORD': 'password',
+        'HOST': 'localhost',
+        'PORT': '',
+    }
+}
+</code></pre>
+
+<p>Выключим режим отладки:</p>
+
+<pre><code>DEBUG = False
+</code></pre>
+
+<p><strong>Примечание</strong>: это упрощенный пример и лучше разделять настройки проекта для окружений разработки и реальной работы - <a href="https://code.djangoproject.com/wiki/SplitSettings">раз</a>, <a href="http://habrahabr.ru/post/104686/">два</a>.</p>
+
+<p>Теперь, если ваше приложение еще не добавлено в git-репозиторий, самое время сделать это (помним про <a href="http://git-scm.com/docs/gitignore">gitignore</a>):</p>
+
+<pre><code># корневой каталог вашего приложения
+git init
+git add * 
+git commit -m 'initial'
+</code></pre>
+
+<p>Далее есть минимум 2 способа:</p>
+
+<ol>
+<li>Красивый и правильный, но надо немного больше повозиться - тыц.</li>
+<li>Как делал я. Мне он был более удобен, так как у меня уже был аккаунт в облачном git-хостинге (называйте как хотите).  Расскажу подробнее.</li>
+</ol>
+
+<p>Регистрируетесь на <a href="https://bitbucket.org/">bitbucket.org</a>, создаете новый приватный git-репозитоий и копируете ссылку на него. Это будет ваш удаленный репозиторий. Далее добавляете ссылку на уделенный репозиторий в локальный репозиторий:</p>
+
+<pre><code>git remote add origin https://your_user@bitbucket.org/your_user/your_repository.git
+</code></pre>
+
+<p>Отправляем код в удаленный репозиторий:</p>
+
+<pre><code>git push
+</code></pre>
+
+<p>Снова заходим по ssh на наш сервер и переходим в каталог, в котором хотим разместить приложение.  И так, копируем наше приложение:</p>
+
+<pre><code>git clone https://your_user@bitbucket.org/your_user/your_repository.git
+</code></pre>
+
+<p>Все, теперь ваш код на рабочем сервере. Создадим виртуальное окружение и установим в него необходимые модули:</p>
+
+<pre><code>cd /path/to/project  # переходим в корень вашего приложения
+virtualenv -p /usr/bin/python3 venv  # создаем виртуальное окружение venv c Python 3 
+. venv/bin/activate  # активируем его
+pip install -r requirements.txt  # устанавливаем зависимости
+pip install psycopg2  # библиотека для работы Django с PostgreSQL
+</code></pre>
+
+<p>Убедитесь, что приложение запускается:</p>
+
+<pre><code>python3 manage.py runserver
+</code></pre>
+
+<p>Теперь ваш код почти говтов к работе.</p>
+
+<h2 id="конфигурация-nginx-и-uwsgi:8d6b9f4b89802d612e86db68bd3d4466">Конфигурация Nginx и  uWSGI</h2>
+
+<p>Скопируйте файл <a href="https://github.com/nginx/nginx/blob/master/conf/uwsgi_params">https://github.com/nginx/nginx/blob/master/conf/uwsgi_params</a> в корень вашего проекта.</p>
+
+<p>Необходимо настроить конфигурации Nginx, uWSGI и настроить связь между ними. Обмениваться данными они будут через сокет-файл.</p>
+
+<p>Создадим конфигурацию Nginx:</p>
+
+<pre><code># /path/to/project/nginx.conf
+upstream django {
+    server unix:///path/to/project/blog.sock;  # путь к сокет-файлу
+}
+
+server {
+    # the port your site will be served on
+    listen      80;
+    # the domain name it will serve for
+    server_name ***.***.***.***;  # IP вашего сервера
+    charset     utf-8;
+
+    # max upload size
+    client_max_body_size 75M;
+
+    # Django media
+    location /media  {
+        alias /path/to/project/media;  # путь к вашим медиа-файлам
+    }
+
+    location /static {
+        alias /path/to/project/static; # путь к статическим файлам вашего сайта
+    }
+
+    location / {
+        uwsgi_pass  django;
+        include     /path/to/project/uwsgi_params; # путь к  uwsgi_params
+    }
+}
+</code></pre>
+
+<p>Создаем ссылку на нашу конфигурацию, что бы Nginx знал о ней. Затем перезапускаем Nginx:</p>
+
+<pre><code>ln -s /path/to/project/nginx.conf /etc/nginx/sites-enabled/
+service nginx restart
+</code></pre>
+
+<p>Создадим конфигурацию uWSGI:</p>
+
+<pre><code># uwsgi.ini
+[uwsgi]
+
+chdir           = /path/to/project  # путь к вашему проекту
+module          = your_site.wsgi:application  # your_site - главный модуль вашего приложения
+home            = /path/to/project/venv  # путь к вашему виртуальному окружению
+master          = True
+processes       = 4
+socket          = /path/to/projec/blog.sock  # путь к сокет-файлу
+# Если у Nginx не хватит прав для работы с сокет-файлом, включим chmod-socket, сначала пробуем 664, потом 666
+# chmod-socket    = 664
+vacuum          = True
+uid             = www-data
+gid             = www-data
+daemonize = /var/log/uwsgi/app/blog.ini  # пишем логи в этот файл
+</code></pre>
+
+<p>Теперь мы можем запустить сервер приложений:</p>
+
+<pre><code>uwsgi --ini uwsgi.ini
+</code></pre>
+
+<p>И так, проверяйте, все должно работать!</p>
+
+<p>Последним штрихом будет добавление автоматического старта uWSGI при перезагрузке сервера:</p>
+
+<pre><code># Редактируем файл /etc/rc.local
+/usr/local/bin/uwsgi --ini /path/to/project/uwsgi.ini
+exit 0
+</code></pre>
+
+<h2 id="послесловие:8d6b9f4b89802d612e86db68bd3d4466">Послесловие</h2>
+
+<p>Обязательно найдется тот, кто спросит: почему uWSGI, а не Gunicorn? Ответ: это не был окончательный выбор в пользу uWSGI, в дальнейшем я хочу сравнить его с Gunicorn.</p>
+
+<p>Надеюсь данное руководство хоть кому-то будет полезным. Спасибо всем, кто прочитал до конца!
+P.S. Буду рад вопросам, идеям и замечаниям в комментариях и подписчикам в моем <a href="https://twitter.com/_alxpy">мини-блоге</a>.</p>
+
+                </section>
+            </article>
+            <footer id="post-meta" class="clearfix">
+                <a href="https://twitter.com/_alxpy">
+                        <img class="avatar" src="https://alxpy.com/images/avatar.png">
+                        <div>
+                            <span class="dark">Alex Kuzmenko</span>
+                            <span></span>
+                        </div>
+                    </a>
+                <section id="sharing">
+                    <a class="twitter" href="https://twitter.com/intent/tweet?text=https%3a%2f%2falxpy.com%2fblog-archive%2fdjango-uwsgi-nginx%2f - %d0%93%d0%be%d1%82%d0%be%d0%b2%d0%b8%d0%bc%20Django%3a%20uWSGI%20%2b%20Nginx by @_alxpy"><span class="icon-twitter"> Tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+                </section>
+            </footer>
+
+            <section class="disqus">
+                <div id="disqus_thread"></div>
+                <script type="text/javascript">
+                    var disqus_shortname = 'alxblogpy';
+                    (function() {
+                        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                        dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+                        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                    })();
+                </script>
+                <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                <a href="//disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+            </section>
+
+            <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+    
+    
+        
+        <li>
+            <a href="https://alxpy.com/blog-archive/custom-field-types-in-sqlalchemy/">Собственные типы полей в SQLAlchemy<aside class="dates">May 3</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="https://alxpy.com/blog-archive/write-a-simple-tornado-chat/">Пишем простой чат на Tornado<aside class="dates">Jan 30</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="https://alxpy.com/blog-archive/killer-features-of-python-3/">Киллер-фичи Python 3<aside class="dates">Jan 22</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="https://alxpy.com/blog-archive/django-uwsgi-nginx/">Готовим Django: uWSGI &#43; Nginx<aside class="dates">Jan 12</aside></a>
+        </li>
+        
+   
+</ul>
+            <footer id="footer">
+    <p class="small">
+        © Copyright 2017 Alex Kuzmenko
+    </p>
+</footer>
+        </section>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://alxpy.com/js/main.js"></script>
+<script src="https://alxpy.com/js/highlight.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+    </body>
+</html>
