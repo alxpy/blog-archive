@@ -13,7 +13,7 @@
 				window.location.protocol = "https"
 			}
 		</script>
-		<meta name="generator" content="Hugo 0.17" />
+		<meta name="generator" content="Hugo 0.16-DEV" />
 		<title>Киллер-фичи Python 3 &middot; alxpy.com</title>
 		<link rel="shortcut icon" href="https://alxpy.com/images/favicon.ico">
 		<link rel="stylesheet" href="https://alxpy.com/css/style.css">
@@ -48,19 +48,19 @@
 
 <p>Когда человек впервые смотрит на различия Python 2 и Python 3, то первым делом он замечает, что <code>print()</code> теперь функция, а не оператор. Я хочу показать немного больше отличий, что бы Вы понимали, что пора переходить на свежую версию Python.</p>
 
-<h2 id="строки">Строки</h2>
+<h2 id="строки:dd4d42089cf450b5531f14e92505f36d">Строки</h2>
 
 <p>В Python 3 строки стали только <code>Unicode</code>. Кодровка по умолчанию &ndash; <code>Utf-8</code>. Это очень удобно, особенно, если вы постоянно работаете с кириллицей. Так же, это спасает от постояных ошибок, связанных со смешиванием закодированного и декодированного текстов. Можно больше не использовать литерал <code>u&quot;...&quot;</code>, но все еще нужно использовать литерал <code>b&quot;...&quot;</code>.</p>
 
 <p>Для хранения текста используется тип - <code>str</code>, а для хранения данных - <code>bytes</code>. Неявные преобразования <code>str-bytes</code> запрещенны. Это защищает от частых ошибок в коде.</p>
 
-<h2 id="числа">Числа</h2>
+<h2 id="числа:dd4d42089cf450b5531f14e92505f36d">Числа</h2>
 
 <p>В Python 2 были 2 типа целых чисел - <code>int</code> и <code>long</code>. В Python 3 остался только <code>long</code>, но называется от теперь <code>int</code>. Теперь при умножении числа или возведении его в степень, оно не может поменять тип.</p>
 
 <p>Поскольку вещественные числа (<code>float</code>) неточны, при работе с деньгами в Python необходимо использовать тип <code>Decimal</code>. Так вот, в Python 3 он стал работать в 20-120 раз быстрее, так как переписан с Python на С.</p>
 
-<h2 id="аннотации-функций">Аннотации функций</h2>
+<h2 id="аннотации-функций:dd4d42089cf450b5531f14e92505f36d">Аннотации функций</h2>
 
 <p>В Python 3 появилась аннотация аргументов и возвращемых значений функций. Выглядит это примерно так:</p>
 
@@ -76,7 +76,7 @@
 
 <p>Вывод: аннотации функций дают &ldquo;плюс&rdquo; к удобству работе в IDE и &ldquo;плюс&rdquo; к структуррированию документации кода.</p>
 
-<h2 id="nonlocal">Nonlocal</h2>
+<h2 id="nonlocal:dd4d42089cf450b5531f14e92505f36d">Nonlocal</h2>
 
 <p>Из внутренней функции в Python 2 нельзя менять переменные во внешней. В Python 3 можно. Далее код нетребующий поснений:</p>
 
@@ -94,7 +94,7 @@
 
 <p>Отличия от <code>global</code> в том, что <code>global</code> засталяет интерпретатор искать имя в пространстве имен всего модуля, а <code>nonlocal</code> &ndash; вверх по функциям, в которых он объявлен.</p>
 
-<h2 id="keyword-only">Keyword only</h2>
+<h2 id="keyword-only:dd4d42089cf450b5531f14e92505f36d">Keyword only</h2>
 
 <p>Все что идет после <code>*</code> можно указывать только явно, то есть по имени. Очень повышает читаемость кода.</p>
 
@@ -117,7 +117,7 @@ Traceback (most recent call last):
 TypeError: func() missing 1 required keyword-only argument: 'c'
 </code></pre>
 
-<h2 id="extended-iterable-unpacking">Extended Iterable Unpacking</h2>
+<h2 id="extended-iterable-unpacking:dd4d42089cf450b5531f14e92505f36d">Extended Iterable Unpacking</h2>
 
 <p>Тут обяснений явно не нужно:</p>
 
@@ -130,11 +130,11 @@ TypeError: func() missing 1 required keyword-only argument: 'c'
 ['2', '3', '4']
 </code></pre>
 
-<h2 id="новый-super">Новый  super()</h2>
+<h2 id="новый-super:dd4d42089cf450b5531f14e92505f36d">Новый  super()</h2>
 
 <p><code>super()</code> теперь можно вызывать без аргументов, так как класс и экзампляр будут выбраны автоматичести.</p>
 
-<h2 id="новый-gil">Новый GIL</h2>
+<h2 id="новый-gil:dd4d42089cf450b5531f14e92505f36d">Новый GIL</h2>
 
 <p>В Python 3.2 появился новый <a href="https://ru.wikipedia.org/wiki/Global_Interpreter_Lock">GIL</a> который лучше работает. Теперь потоки спят и ждут GIL не 100 тиков (что может быть очень долго), а 5 мс. В результате, вероятность того, что многопоточное приложение будет работать дольше однопоточного крайне мала и холливарные статьи на эти темы можно забыть.</p>
 
@@ -219,7 +219,7 @@ Python 3 приобрел массу крутых плюшек и однозна
 </ul>
             <footer id="footer">
     <p class="small">
-        © Copyright 2016 Alex Kuzmenko
+        © Copyright 2017 Alex Kuzmenko
     </p>
 </footer>
         </section>

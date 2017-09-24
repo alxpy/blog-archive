@@ -13,7 +13,7 @@
 				window.location.protocol = "https"
 			}
 		</script>
-		<meta name="generator" content="Hugo 0.17" />
+		<meta name="generator" content="Hugo 0.16-DEV" />
 		<title>Пишем простой чат на Tornado &middot; alxpy.com</title>
 		<link rel="shortcut icon" href="https://alxpy.com/images/favicon.ico">
 		<link rel="stylesheet" href="https://alxpy.com/css/style.css">
@@ -75,7 +75,7 @@ import tornado.gen
 
 <p>Что делает каждый из них, будет понятно дальше.</p>
 
-<h2 id="конфигурация-приложения">Конфигурация приложения</h2>
+<h2 id="конфигурация-приложения:13e4dfdcef04281049fd1665679b3ddc">Конфигурация приложения</h2>
 
 <p>Создадим класс, описывающий наше приложение:</p>
 
@@ -113,7 +113,7 @@ import tornado.gen
 
 <p>Во время разработки Вы постоянно правите код и, что-бы после каждой правки не перезапускать Ваше приложение вручную, можно указать Tornado делать это автоматически - <code>debug=True</code>.</p>
 
-<h2 id="создание-обработчиков">Создание обработчиков</h2>
+<h2 id="создание-обработчиков:13e4dfdcef04281049fd1665679b3ddc">Создание обработчиков</h2>
 
 <p>Далее мы создадим базовый обработчик (handler):</p>
 
@@ -173,7 +173,7 @@ import tornado.gen
         self.redirect(&quot;/&quot;)
 </code></pre>
 
-<h2 id="работа-с-websocket">Работа с WebSocket</h2>
+<h2 id="работа-с-websocket:13e4dfdcef04281049fd1665679b3ddc">Работа с WebSocket</h2>
 
 <blockquote>
 <p>WebSocket — протокол полнодуплексной связи поверх TCP-соединения, предназначенный для обмена сообщениями между браузером и веб-сервером в режиме реального времени.</p>
@@ -207,7 +207,7 @@ import tornado.gen
 
 <p><code>open</code> и <code>on_close</code> пополняют список соединений (connections) новым каналом и удалют канал из списка при его закрытии. <code>on_message</code> - реагирует на входящее сообщение, <code>write_message()</code> отправляет сообщение указанному соединению (conn). Если вдруг можно отослать сообщение сразу по всем каналом, подскажите, пожалуйста, в комментариях как это сделать.</p>
 
-<h2 id="запуск-приложения">Запуск приложения</h2>
+<h2 id="запуск-приложения:13e4dfdcef04281049fd1665679b3ddc">Запуск приложения</h2>
 
 <p>Тут все просто: создаем объект нашего приложения и говорим какой порт ему слушать (если в окружении нет параметра &lsquo;PORT&rsquo;, то 5000й):</p>
 
@@ -223,13 +223,13 @@ if __name__ == '__main__':
 
 <p>Создаем экземпляр основной петли ввода/вывода <code>tornado.ioloop.IOLoop</code> и запускаем его.</p>
 
-<h2 id="ссылки">Ссылки</h2>
+<h2 id="ссылки:13e4dfdcef04281049fd1665679b3ddc">Ссылки</h2>
 
 <p>Полный код - <a href="https://github.com/alxpy/simple-tornado-chat/tree/0.2">https://github.com/alxpy/simple-tornado-chat/tree/0.2</a></p>
 
 <p>Документация по Tornado - <a href="http://www.tornadoweb.org/en/stable/">http://www.tornadoweb.org/en/stable/</a></p>
 
-<h2 id="послесловие">Послесловие</h2>
+<h2 id="послесловие:13e4dfdcef04281049fd1665679b3ddc">Послесловие</h2>
 
 <p>Получилось сумбурно, но надеюсь в целом понятно. Если есть дополнительные вопросы, задавайте их в комментариях и я постараюсь ответить.</p>
 
@@ -307,7 +307,7 @@ if __name__ == '__main__':
 </ul>
             <footer id="footer">
     <p class="small">
-        © Copyright 2016 Alex Kuzmenko
+        © Copyright 2017 Alex Kuzmenko
     </p>
 </footer>
         </section>
